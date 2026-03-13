@@ -1,6 +1,8 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Login from "./pages/Login";
 import List from "./pages/List";
+import Details from "./pages/Details";
+import Analytics from "./pages/Analytics";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 const App = () => {
@@ -13,6 +15,22 @@ const App = () => {
           element={
             <ProtectedRoute>
               <List />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/details/:id"
+          element={
+            <ProtectedRoute>
+              <Details />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/analytics/:id"
+          element={
+            <ProtectedRoute>
+              <Analytics />
             </ProtectedRoute>
           }
         />

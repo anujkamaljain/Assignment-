@@ -1,6 +1,11 @@
 import { useState, useCallback, useMemo } from "react";
 
-const useVirtualization = ({ totalItems, rowHeight, containerHeight, bufferCount = 5 }) => {
+const useVirtualization = ({
+  totalItems,
+  rowHeight,
+  containerHeight,
+  bufferCount = 5,
+}) => {
   const [scrollTop, setScrollTop] = useState(0);
 
   const onScroll = useCallback((e) => {
@@ -10,15 +15,34 @@ const useVirtualization = ({ totalItems, rowHeight, containerHeight, bufferCount
   const totalHeight = totalItems * rowHeight;
 
   const { startIndex, endIndex, offsetY } = useMemo(() => {
-    const start = Math.max(0, Math.floor(scrollTop / rowHeight) - bufferCount);
+    if (totalItems === 0) {
+      return { startIndex: 0, endIndex: 0, offsetY: 0 };
+    }
+
     const visibleCount = Math.ceil(containerHeight / rowHeight);
-    const end = Math.min(totalItems - 1, start + visibleCount + bufferCount * 2);
-    const offset = start * rowHeight;
 
-    return { startIndex: start, endIndex: end, offsetY: offset };
-  }, [scrollTop, rowHeight, containerHeight, totalItems, bufferCount]);
+    const startIndex = Math.max(
+      0,
+      Math.floor(scrollTop / rowHeight) - bufferCount
+    );
 
-  return { totalHeight, startIndex, endIndex, offsetY, onScroll };
+    const endIndex = Math.min(
+      totalItems,
+      startIndex + visibleCount + bufferCount * 2
+    );
+
+    const offsetY = startIndex * rowHeight;
+
+    return { startIndex, endIndex, offsetY };
+  }, [scrollTop, totalItems, rowHeight, containerHeight, bufferCount]);
+
+  return {
+    totalHeight,
+    startIndex,
+    endIndex,
+    offsetY,
+    onScroll,
+  };
 };
 
 export { useVirtualization };

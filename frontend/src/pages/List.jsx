@@ -5,41 +5,54 @@ import { fetchEmployees } from "../services/api";
 import { useVirtualization } from "../hooks/useVirtualization";
 import GridRow from "../components/GridRow";
 
-const ROW_HEIGHT = 48;
+const ROW_HEIGHT = 32;
 const HEADER_HEIGHT = 48;
 
 const List = () => {
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const containerRef = useRef(null);
-  const [containerHeight, setContainerHeight] = useState(0);
+  const [containerHeight, setContainerHeight] = useState(600);
+
+  const scrollContainerRef = useRef(null);
   const { logout } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
     fetchEmployees()
-      .then((data) => setEmployees(Array.isArray(data) ? data : []))
-      .catch(() => setError("Failed to load data"))
-      .finally(() => setLoading(false));
+      .then((data) => {
+        setEmployees(Array.isArray(data) ? data : []);
+      })
+      .catch(() => {
+        setError("Failed to load data");
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   }, []);
 
   useEffect(() => {
     const updateHeight = () => {
-      if (containerRef.current) {
-        setContainerHeight(containerRef.current.clientHeight);
+      if (scrollContainerRef.current) {
+        setContainerHeight(scrollContainerRef.current.clientHeight);
       }
     };
+
     updateHeight();
     window.addEventListener("resize", updateHeight);
-    return () => window.removeEventListener("resize", updateHeight);
-  }, [loading]);
 
-  const { totalHeight, startIndex, endIndex, offsetY, onScroll } = useVirtualization({
-    totalItems: employees.length,
-    rowHeight: ROW_HEIGHT,
-    containerHeight,
-  });
+    return () => window.removeEventListener("resize", updateHeight);
+  }, []);
+
+  const { totalHeight, startIndex, endIndex, offsetY, onScroll } =
+    useVirtualization({
+      totalItems: employees.length,
+      rowHeight: ROW_HEIGHT,
+      containerHeight,
+      bufferCount: 10,
+    });
+
+  const visibleEmployees = employees.slice(startIndex, endIndex);
 
   const handleLogout = () => {
     logout();
@@ -62,12 +75,11 @@ const List = () => {
     );
   }
 
-  const visibleRows = employees.slice(startIndex, endIndex + 1);
-
   return (
-    <div className="h-screen bg-gray-950 flex flex-col">
+    <div className="h-screen bg-gray-950 flex flex-col overflow-hidden">
       <div className="flex items-center justify-between px-6 py-4 border-b border-gray-800">
         <h1 className="text-xl font-semibold text-white">Employees</h1>
+
         <button
           onClick={handleLogout}
           className="px-4 py-1.5 text-sm bg-gray-800 text-gray-300 rounded-lg hover:bg-gray-700 transition-colors"
@@ -77,7 +89,7 @@ const List = () => {
       </div>
 
       <div
-        className="grid grid-cols-5 px-4 items-center border-b border-gray-700 text-sm font-medium text-gray-400"
+        className="grid grid-cols-5 px-4 items-center border-b border-gray-700 text-sm font-medium text-gray-400 flex-shrink-0"
         style={{ height: HEADER_HEIGHT }}
       >
         <span>Name</span>
@@ -88,15 +100,27 @@ const List = () => {
       </div>
 
       <div
-        ref={containerRef}
+        ref={scrollContainerRef}
         onScroll={onScroll}
-        className="flex-1 overflow-auto"
+        className="flex-1 overflow-y-auto overflow-x-hidden"
       >
-        <div style={{ height: totalHeight, position: "relative" }}>
-          <div style={{ position: "absolute", top: offsetY, left: 0, right: 0 }}>
-            {visibleRows.map((emp, i) => (
+        <div
+          style={{
+            height: totalHeight,
+            position: "relative",
+          }}
+        >
+          <div
+            style={{
+              position: "absolute",
+              top: offsetY,
+              left: 0,
+              right: 0,
+            }}
+          >
+            {visibleEmployees.map((emp, i) => (
               <GridRow
-                key={startIndex + i}
+                key={`${emp.name}-${startIndex + i}`}
                 employee={emp}
                 style={{ height: ROW_HEIGHT }}
               />
