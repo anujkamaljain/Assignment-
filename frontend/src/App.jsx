@@ -1,12 +1,7 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Login from "./pages/Login";
+import List from "./pages/List";
 import ProtectedRoute from "./components/ProtectedRoute";
-
-const ListPlaceholder = () => (
-  <div className="min-h-screen flex items-center justify-center bg-gray-950 text-white text-xl">
-    Employee List
-  </div>
-);
 
 const App = () => {
   return (
@@ -17,7 +12,7 @@ const App = () => {
           path="/list"
           element={
             <ProtectedRoute>
-              <ListPlaceholder />
+              <List />
             </ProtectedRoute>
           }
         />
